@@ -1,6 +1,13 @@
-import Useful
+module Chatterbot
+( chatterbot 
+) where
+
 import Data.List (find)
 import Data.Maybe 
+import Data.Char (toLower)
+import System.Random
+
+import Useful
 import Part3
 
 -- TYPES
@@ -36,26 +43,41 @@ reflect :: Phrase -> Phrase
 reflect = map reflectAux 
 
 rulesApply :: [PhrasePair] -> Phrase -> Phrase
-rulesApply patterns input = try (transformationsApply "*" reflect patterns) input
+rulesApply = try . (transformationsApply "*" reflect)
+
+stateOfMind :: BotBrain -> IO (Phrase -> Phrase)
+stateOfMind brain = do
+    r <- randomIO :: IO Float
+    let randomElem list = list !! (floor . (*r) . fromIntegral . length $ list)
+        rules = map (map2 (id, randomElem)) brain
+        in return (rulesApply rules)
+
+endOfDialog = (=="quit") . map toLower
+present = unwords
+prepare = words . map toLower . filter (not . flip elem ".,:;*!#%&|")
+
+rulesCompile :: [(String, [String])] -> BotBrain
+rulesCompile = 
+    let lowerWords = words . map toLower
+    in map (map2 (lowerWords, (map lowerWords)))
 
 -- MAIN LOOP
--- chatterbot :: String -> [(String, [String])] -> IO ()
--- chatterbot botName botRules = do
---     putStrLn ("\n\nHi! I am " ++ botName 
---                               ++ ". How are you?")
---     botloop
---   where
---     brain = rulesCompile botRules
---     botloop = do
---       putStr "\n: "
---       question <- getLine
---
---       answer <- stateOfMind brain
---       putStrLn (botName ++ ": " 
---          ++ (present . answer . prepare) question)
---       if (not . endOfDialog) question 
---          then botloop 
---          else return ()
+chatterbot :: String -> [(String, [String])] -> IO ()
+chatterbot botName botRules = do
+    putStrLn ("\n\nHi! I am " ++ botName 
+                              ++ ". How are you?")
+    botloop
+  where
+    brain = rulesCompile botRules
+    botloop = do
+      putStr "\n: "
+      question <- getLine
+      answer <- stateOfMind brain
+      putStrLn (botName ++ ": " 
+         ++ (present . answer . prepare) question)
+      if (not . endOfDialog) question 
+         then botloop 
+         else return ()
 
 -- TESTS 
 testReflect1 = (==) (reflect ["i've"]) ["you have"]
@@ -66,12 +88,12 @@ testReflect3 = (==) (reflect ["i", "will", "never", "see", "my",
                               "reflection", "in", "my", "eyes"]
 testReflect = and [testReflect1, testReflect2, testReflect3]
 
-testRulesRaw = [("My name is *", "Hello *"), ("I like *", "Why do you like *")]
-testRules = map (map2 (words, words)) testRulesRaw
+testRules = [(words "My name is *", words "Hello *"), (words "I like *", words "Why do you like *")]
 testRulesX = rulesApply testRules
 testRulesApply1 = (==) (testRulesX (words "My name is yoav")) (words "Hello yoav")
 testRulesApply2 = (==) (testRulesX (words "I like turtles")) (words "Why do you like turtles")
 testRulesApply3 = (==) (testRulesX (words "I like me")) (words "Why do you like you")
-testRulesApply = and [testRulesApply1, testRulesApply2, testRulesApply3]
+testRulesApply4 = (==) (testRulesX (words "No match!")) (words "No match!") 
+testRulesApply = and [testRulesApply1, testRulesApply2, testRulesApply3, testRulesApply4]
 
 testChatterbot = and [testReflect, testRulesApply]
