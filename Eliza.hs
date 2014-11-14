@@ -7,18 +7,18 @@ eliza = [
       ["Speak up! I can't hear you."]),
 
   ("I need *",
-      ["Why do you need *?",
+      ["Why do you need * ?",
        "Would it really help you to get * ?",
        "Are you sure you need * ?"]),
 
   ("Why don't you *",
       ["Do you really think I don't * ?",
-       "Perhaps eventually I will *.",
+       "Perhaps eventually I will * .",
        "Do you really want me to * ?"]),
 
   ("Why can't I *",
       ["Do you think you should be able to * ?",
-       "If you could *, what would you do?",
+       "If you could * , what would you do?",
        "I don't know -- why can't you * ?",
        "Have you really tried?"]),
 
@@ -45,8 +45,8 @@ eliza = [
        "I may be * -- what do you think?"]),
 
   ("What is Haskell",
-      ["Oh, I thought you knew that. It is a functional" ++
-       "programming language featuring strong typing and" ++
+      ["Oh, I thought you knew that. It is a functional " ++
+       "programming language featuring strong typing and " ++
        "lazy evaluation."]),
 
   ("What *",
