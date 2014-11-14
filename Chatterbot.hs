@@ -54,12 +54,12 @@ stateOfMind brain = do
 
 endOfDialog = (=="quit") . map toLower
 present = unwords
-prepare = words . map toLower . filter (not . flip elem ".,:;*!#%&|")
+prepare = words . map toLower . filter (not . flip elem ".,:;!#%&|")
 
 rulesCompile :: [(String, [String])] -> BotBrain
 rulesCompile = 
     let lowerWords = words . map toLower
-    in map (map2 (lowerWords, (map lowerWords)))
+    in map (map2 (prepare, map words))
 
 -- MAIN LOOP
 chatterbot :: String -> [(String, [String])] -> IO ()
