@@ -104,6 +104,27 @@ reduce :: Phrase -> Phrase
 reduce = reductionsApply reductions
 
 reductionsApply :: [PhrasePair] -> Phrase -> Phrase
-{- TO BE WRITTEN -}
-reductionsApply _ = id
+reductionsApply reductions = 
+    try (transformationsApply "*" (reductionsApply reductions) reductions)
 
+-----------------------------
+-- Custom tests for debugging 
+-----------------------------
+
+testReflect1 = (==) (reflect ["i've"]) ["you have"]
+testReflect2 = (==) (reflect ["i've", "are", "your"]) ["you have", "am", "my"]
+testReflect3 = (==) (reflect ["i", "will", "never", "see", "my",
+                              "reflection", "in", "your", "eyes"])
+                             ["you", "will", "never", "see", "your",
+                              "reflection", "in", "my", "eyes"]
+testReflect = and [testReflect1, testReflect2, testReflect3]
+
+testRules = [(words "My name is *", words "Hello *"), (words "I like *", words "Why do you like *")]
+testRulesX = rulesApply testRules
+testRulesApply1 = (==) (testRulesX (words "My name is yoav")) (words "Hello yoav")
+testRulesApply2 = (==) (testRulesX (words "I like turtles")) (words "Why do you like turtles")
+testRulesApply3 = (==) (testRulesX (words "I like me")) (words "Why do you like you")
+testRulesApply4 = (==) (testRulesX (words "No match!")) (words "No match!") 
+testRulesApply = and [testRulesApply1, testRulesApply2, testRulesApply3, testRulesApply4]
+
+testChatterbot = and [testReflect, testRulesApply]
