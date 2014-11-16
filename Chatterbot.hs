@@ -42,7 +42,7 @@ reflectAux :: String -> String
 reflectAux word 
     | isJust result = snd . fromJust $ result
     | otherwise = word
-    where result = find ((== word) . fst) reflections
+    where result = find ((==) word . fst) reflections
 reflect :: Phrase -> Phrase
 reflect = map reflectAux 
 

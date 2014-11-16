@@ -11,6 +11,9 @@ orElse :: Maybe a -> Maybe a -> Maybe a
 orElse Nothing  x  = x
 orElse (Just a) _  = Just a
 
+-- takes in a f that may or may not return Nothing on x
+-- if (f x) is nothing, then return x
+-- otherwise, return (f x)
 try :: (a -> Maybe a) -> a -> a
 try f x = maybe x id (f x)
 
@@ -21,4 +24,3 @@ fix f x
 
 pick :: RealFrac r => r -> [a] -> a
 pick u xs = xs !! (floor.(u*).fromIntegral.length) xs
-
