@@ -37,14 +37,11 @@ stateOfMind brain = do
 rulesApply :: [PhrasePair] -> Phrase -> Phrase
 rulesApply = try . (transformationsApply "*" reflect)
 
--- TODO: point free?
-reflectAux :: String -> String
-reflectAux word 
-    | isJust result = snd . fromJust $ result
-    | otherwise = word
-    where result = find ((==) word . fst) reflections
+reflectWord :: String -> String
+reflectWord word =
+    maybe word snd (find ((== word) . fst) reflections)
 reflect :: Phrase -> Phrase
-reflect = map reflectAux 
+reflect = map reflectWord
 
 reflections =
   [ ("am",     "are"),

@@ -9,29 +9,46 @@ import Control.Monad (join)
 --------------------------------------------------------
 
 -- Replaces a wildcard in a list with the list given as the third argument
+-- Implementation note: It was possible to remove more arguments to make
+--                      this function even more pointfree, but I believe
+--                      this form is more readable
+
 substitute :: Eq a => a -> [a] -> [a] -> [a]
 substitute _ [] = (\_ -> [])
 substitute w (x:xs) 
     | x == w = join (flip (++) . (substitute w xs)) 
     | otherwise = (:) x . (substitute w xs) 
 
+-- Helper function to match
+-- Note: I added a wildcard argument to the definition of these functions due 
+--       to the case where the rest of the match includes a wildcard and 
+--       we need to call match recursively to find what it is 
+--       Example:
+--       singleWildcardMatch '*' '*word*' 'aworda' = Just 'a'
+--       longerWildcardMatch '*' '*rd*' 'aworda' = Just 'awo'
+
+--       I also experimented with several pointfree solutions to these functions
+--       but found that the following versions were much more readable in my opinion
+
+singleWildcardMatch, longerWildcardMatch :: Eq a => a -> [a] -> [a] -> Maybe [a]
+singleWildcardMatch w x y = mmap (\_ -> [head y]) (match w (tail x) (tail y)) 
+longerWildcardMatch w x y = mmap snd rMatch
+    where rMatch = find (isJust . (match w (tail x)) . fst) [((drop n y), (take n y)) | n <- [1..(length y)]]
+
 -- Tries to match two lists. If they match, the result consists of the sublist
 -- bound to the wildcard in the pattern list.
+-- Implementation note: Again, I tried several options to make match pointfree, 
+--                      but I found that this implementation was the most readable
+--                      form I came up with.
+
 match :: Eq a => a -> [a] -> [a] -> Maybe [a]
 match _ [] [] = Just []
 match _ [] _ = Nothing 
 match _ _ [] = Nothing 
 match w p s
-    | (head p) == w = orElse (singleMatch p s) (longerMatch p s)
-    | (head p) == (head s) = match w (tail p) (tail s)
+    | head p == w = orElse (singleWildcardMatch w p s) (longerWildcardMatch w p s)
+    | head p == head s = match w (tail p) (tail s)
     | otherwise = Nothing
-    where singleMatch x y 
-            | isJust (match w (tail x) (tail y)) = Just [(head y)]
-            | otherwise = Nothing
-          longerMatch (x:xs) y 
-            | isJust rMatch = Just ((snd . fromJust) rMatch)
-            | otherwise = Nothing 
-            where rMatch = find (isJust . (match w xs) . fst) [((drop n y), (take n y)) | n <- [1..(length y)]]
 
 -- Test cases --------------------
 
@@ -73,14 +90,15 @@ testPart2 = and [testSubstitute, testMatch]
 -- Applying patterns
 --------------------------------------------------------
 
+-- Again, I experimented with some pointfree styles for the 
+-- following functions, but the large amount of flips resulted
+-- in unreadable code (in my opinion). The following is the most
+-- readable and functional style I could find (in my opinion).
+
 -- Applying a single pattern
 transformationApply :: Eq a => a -> ([a] -> [a]) -> [a] -> ([a], [a]) -> Maybe [a]
-transformationApply w f list pattern 
-    | isJust matchRes = Just (substitute w pattern2 (f (fromJust matchRes)))
-    | otherwise = Nothing
-    where pattern1 = (fst pattern) 
-          pattern2 = (snd pattern)
-          matchRes = match w pattern1 list
+transformationApply w f list pattern =
+    mmap (substitute w (snd pattern) . f) (match w (fst pattern) list)
 
 -- Applying a list of patterns until one succeeds
 transformationsApply :: Eq a => a -> ([a] -> [a]) -> [([a], [a])] -> [a] -> Maybe [a]
