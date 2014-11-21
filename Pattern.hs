@@ -2,7 +2,6 @@ module Pattern where
 import Utilities
 import Data.Maybe 
 import Data.List (find)
-import Control.Monad (join)
 
 -------------------------------------------------------
 -- Match and substitute
@@ -14,10 +13,10 @@ import Control.Monad (join)
 --                      this form is more readable
 
 substitute :: Eq a => a -> [a] -> [a] -> [a]
-substitute _ [] = (\_ -> [])
-substitute w (x:xs) 
-    | x == w = join (flip (++) . (substitute w xs)) 
-    | otherwise = (:) x . (substitute w xs) 
+substitute _ [] _ = []
+substitute w (x:xs) y
+    | x == w = y ++ (substitute w xs y)
+    | otherwise = x : (substitute w xs y) 
 
 -- Helper function to match
 -- Note: I added a wildcard argument to the definition of these functions due 
