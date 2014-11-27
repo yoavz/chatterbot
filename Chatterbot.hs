@@ -4,7 +4,6 @@ import Pattern
 import System.Random
 import Data.Char (toLower)
 import Data.List (find)
-import Data.Maybe 
 
 chatterbot :: String -> [(String, [String])] -> IO ()
 chatterbot botName botRules = do
@@ -30,18 +29,14 @@ type BotBrain = [(Phrase, [Phrase])]
 stateOfMind :: BotBrain -> IO (Phrase -> Phrase)
 stateOfMind brain = do
     r <- randomIO :: IO Float
-    let randomElem list = list !! (floor . (*r) . fromIntegral . length $ list)
-        rules = map (map2 (id, randomElem)) brain
+    let rules = map (map2 (id, pick r)) brain
         in return (rulesApply rules)
 
 rulesApply :: [PhrasePair] -> Phrase -> Phrase
 rulesApply = try . (transformationsApply "*" reflect)
 
-reflectWord :: String -> String
-reflectWord word =
-    maybe word snd (find ((== word) . fst) reflections)
 reflect :: Phrase -> Phrase
-reflect = map reflectWord
+reflect = (map . try) (flip lookup reflections)
 
 reflections =
   [ ("am",     "are"),
@@ -75,10 +70,7 @@ prepare :: String -> Phrase
 prepare = reduce . words . map toLower . filter (not . flip elem ".,:;*!#%&|") 
 
 rulesCompile :: [(String, [String])] -> BotBrain
-rulesCompile = 
-    let lowerWords = words . map toLower
-        prepareRule = words . map toLower . filter (not . flip elem ".,:;!#%&|")
-    in map (map2 (prepareRule, map words))
+rulesCompile = (map . map2) (words . map toLower, map words)
 
 --------------------------------------
 

@@ -30,9 +30,9 @@ substitute w (x:xs) y
 --       but found that the following versions were much more readable in my opinion
 
 singleWildcardMatch, longerWildcardMatch :: Eq a => a -> [a] -> [a] -> Maybe [a]
-singleWildcardMatch w x y = mmap (\_ -> [head y]) (match w (tail x) (tail y)) 
-longerWildcardMatch w x y = mmap snd rMatch
-    where rMatch = find (isJust . (match w (tail x)) . fst) [((drop n y), (take n y)) | n <- [1..(length y)]]
+singleWildcardMatch w (x:xs) (y:ys) = mmap (const [y]) (match w xs ys) 
+longerWildcardMatch w (x:xs) y = mmap snd rMatch  
+    where rMatch = find (isJust . (match w xs) . fst) [((drop n y), (take n y)) | n <- [1..(length y)]]
 
 -- Tries to match two lists. If they match, the result consists of the sublist
 -- bound to the wildcard in the pattern list.
