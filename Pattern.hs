@@ -25,14 +25,14 @@ substitute w (x:xs) y
 --       Example:
 --       singleWildcardMatch '*' '*word*' 'aworda' = Just 'a'
 --       longerWildcardMatch '*' '*rd*' 'aworda' = Just 'awo'
+--      '
 
 --       I also experimented with several pointfree solutions to these functions
 --       but found that the following versions were much more readable in my opinion
 
-singleWildcardMatch, longerWildcardMatch :: Eq a => a -> [a] -> [a] -> Maybe [a]
-singleWildcardMatch w (x:xs) (y:ys) = mmap (const [y]) (match w xs ys) 
-longerWildcardMatch w (x:xs) y = mmap snd rMatch  
-    where rMatch = find (isJust . (match w xs) . fst) [((drop n y), (take n y)) | n <- [1..(length y)]]
+singleWildcardMatch, longerWildcardMatch :: Eq a => [a] -> [a] -> Maybe [a]
+singleWildcardMatch (w:xs) (y:ys) = mmap (const [y]) (match w xs ys) 
+longerWildcardMatch (w:xs) (y:ys) = mmap (y:) (match w (w:xs) ys)
 
 -- Tries to match two lists. If they match, the result consists of the sublist
 -- bound to the wildcard in the pattern list.
@@ -45,7 +45,7 @@ match _ [] [] = Just []
 match _ [] _ = Nothing 
 match _ _ [] = Nothing 
 match w p s
-    | head p == w = orElse (singleWildcardMatch w p s) (longerWildcardMatch w p s)
+    | head p == w = orElse (singleWildcardMatch p s) (longerWildcardMatch p s)
     | head p == head s = match w (tail p) (tail s)
     | otherwise = Nothing
 
